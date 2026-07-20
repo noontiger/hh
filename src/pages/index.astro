@@ -11,6 +11,17 @@ const initials = profile.name
 
 const featured = projects.filter((p) => p.featured);
 const others = projects.filter((p) => !p.featured);
+
+const themes = [
+  { id: 'darkplus', label: 'Dark+', color: '#569cd6', bg: '#1e1e1e' },
+  { id: 'lightplus', label: 'Light+', color: '#007acc', bg: '#ffffff' },
+  { id: 'solarized-dark', label: 'Solarized Dark', color: '#268bd2', bg: '#002b36' },
+  { id: 'monokai', label: 'Monokai', color: '#66d9ef', bg: '#272822' },
+  { id: 'github-dark', label: 'GitHub Dark', color: '#58a6ff', bg: '#0d1117' },
+  { id: 'github-light', label: 'GitHub Light', color: '#0969da', bg: '#ffffff' },
+  { id: 'high-contrast', label: 'High Contrast', color: '#ffd700', bg: '#000000' },
+  { id: 'abyss', label: 'Abyss', color: '#6a9cff', bg: '#00002a' },
+];
 ---
 
 <!doctype html>
@@ -29,6 +40,15 @@ const others = projects.filter((p) => !p.featured);
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+    <!-- Apply saved theme before paint to avoid flash -->
+    <script is:inline>
+      (function () {
+        try {
+          var t = localStorage.getItem('hh-theme');
+          if (t) document.documentElement.dataset.theme = t;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <!-- ============ NAV ============ -->
@@ -44,6 +64,25 @@ const others = projects.filter((p) => !p.featured);
           <a class="nav-link" href="#experience"><span>02.</span>Experience</a>
           <a class="nav-link" href="#projects"><span>03.</span>Projects</a>
           <a class="nav-link" href="#contact"><span>04.</span>Contact</a>
+
+          <details class="theme-wrap" id="theme-wrap">
+            <summary class="theme-btn" aria-label="切换主题">
+              <span class="theme-icon">🎨</span>
+              <span class="theme-current" id="theme-current">Dark+</span>
+              <span class="caret">▾</span>
+            </summary>
+            <div class="theme-menu">
+              {
+                themes.map((t) => (
+                  <button type="button" class="theme-opt" data-theme-value={t.id}>
+                    <span class="theme-dot" style={`background:${t.color}`}></span>
+                    <span class="theme-label">{t.label}</span>
+                  </button>
+                ))
+              }
+            </div>
+          </details>
+
           <a class="btn nav-resume" href={profile.resumeUrl}>Resume</a>
         </div>
       </div>
@@ -196,5 +235,35 @@ const others = projects.filter((p) => !p.featured);
         </p>
       </div>
     </footer>
+
+    <script is:inline>
+      (function () {
+        var KEY = 'hh-theme';
+        var wrap = document.getElementById('theme-wrap');
+        var current = document.getElementById('theme-current');
+        var opts = document.querySelectorAll('.theme-opt');
+
+        function labelFor(name) {
+          var b = document.querySelector('.theme-opt[data-theme-value="' + name + '"]');
+          return b ? b.querySelector('.theme-label').textContent : name;
+        }
+        function apply(name) {
+          document.documentElement.dataset.theme = name;
+          try { localStorage.setItem(KEY, name); } catch (e) {}
+          if (current) current.textContent = labelFor(name);
+        }
+
+        opts.forEach(function (b) {
+          b.addEventListener('click', function () {
+            apply(b.getAttribute('data-theme-value'));
+            if (wrap) wrap.removeAttribute('open');
+          });
+        });
+
+        // sync label with any theme already applied (e.g. by the anti-FOUC script)
+        var saved = document.documentElement.dataset.theme;
+        if (saved && current) current.textContent = labelFor(saved);
+      })();
+    </script>
   </body>
 </html>
